@@ -1,0 +1,63 @@
+name: CI
+
+# 每次 push 到主分支 / 任何 PR 都跑一遍 lint + debug 构建。
+# 不出 release APK——release 需要签名，签名 keystore 放在 GitHub Secrets 里再单独写 workflow。
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    name: Lint + Build debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # CI 环境没有 local.properties，buildConfigField 会用空字符串。
+      # 真要让 CI 能拉数据，把 FOOTBALL_DATA_TOKEN 加成 GitHub Secret，
+      # 然后这里写出来：
+      #   echo "FOOTBALL_DATA_TOKEN=${{ secrets.FOOTBALL_DATA_TOKEN }}" >> local.properties
+      # v1 暂时只验证编译，不跑真实网络请求，所以空 token 没问题
+      - name: Create empty local.properties
+        run: |
+          touch local.properties
+          echo "FOOTBALL_DATA_TOKEN=" >> local.properties
+          echo "TEAMS_REMOTE_URL=" >> local.properties
+
+      - name: Run lint
+        run: ./gradlew lintDebug
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.html
+          retention-days: 14
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanqiutixing-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14

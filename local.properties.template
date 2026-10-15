@@ -1,0 +1,13 @@
+# 复制本文件为 local.properties 并填入真实值
+# Android Studio 会自动生成 sdk.dir
+# 注意：local.properties 在 .gitignore 中，不要提交
+
+sdk.dir=/path/to/your/Android/Sdk
+
+# 在 https://www.football-data.org/client/register 免费注册后，
+# 邮件里会收到一串 API token，粘到下面
+FOOTBALL_DATA_TOKEN=your_token_here
+
+# 可选：远程球队配置 URL（留空则只用 assets/teams.json）
+# 例如：https://gist.githubusercontent.com/yourname/xxxx/raw/teams.json
+TEAMS_REMOTE_URL=

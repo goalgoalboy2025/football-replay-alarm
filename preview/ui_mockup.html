@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>看球不熬夜闹钟 · v1 UI mockup (UCL edition)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep: #050a24;
+  --deep-2: #0a1340;
+  --surface: #131e4a;
+  --surface-2: #1a2a5e;
+  --border: rgba(255,255,255,0.08);
+  --cyan: #00aeef;
+  --cyan-glow: rgba(0,174,239,0.45);
+  --gold: #ffc72c;
+  --red: #e63946;
+  --white: #ffffff;
+  --muted: #8a96bf;
+  --muted-2: #5a6796;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 50% -100px, #102060 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 100% 50%, #1a1850 0%, transparent 60%),
+    var(--deep);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  min-height: 100vh;
+  color: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+.cond { font-family: 'Barlow Condensed', 'Inter', sans-serif; }
+.num { font-family: 'Oswald', 'Inter', sans-serif; }
+
+/* ---------- 页头 ---------- */
+.page-header {
+  padding: 60px 24px 32px;
+  text-align: center;
+}
+.page-header .badge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  background: rgba(0,174,239,0.10);
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+.page-header h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.0;
+  margin: 0 0 16px;
+}
+.page-header h1 .accent { color: var(--cyan); }
+.page-header p {
+  color: var(--muted);
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ---------- 手机框 ---------- */
+.grid {
+  display: grid;
+  gap: 64px 48px;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 24px 24px 96px;
+}
+@media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1480px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+.phone {
+  width: 380px;
+  height: 800px;
+  border-radius: 42px;
+  background: #000;
+  padding: 11px;
+  box-shadow:
+    0 30px 80px -20px rgba(0,0,0,.7),
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 0 60px rgba(0,174,239,0.06);
+  position: relative;
+}
+.phone::after {
+  /* 顶部 notch */
+  content:'';
+  position:absolute; left:50%; top:22px;
+  transform:translateX(-50%);
+  width: 116px; height: 28px;
+  background:#000;
+  border-radius: 14px;
+  z-index: 5;
+}
+.screen {
+  width:100%; height:100%;
+  border-radius: 32px;
+  overflow:hidden;
+  background: var(--deep);
+  background-image:
+    radial-gradient(ellipse 300px 200px at 80% 10%, rgba(0,174,239,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 300px at 20% 100%, rgba(255,199,44,0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #0a1240 0%, #050a24 100%);
+  display:flex; flex-direction:column;
+  position:relative;
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  padding: 54px 22px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom: 1px solid var(--border);
+}
+.topbar .title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:0.3px;
+}
+.topbar .icons {
+  display:flex; gap:14px; font-size:18px; color: var(--muted);
+}
+.topbar .back {
+  font-size:24px; color: var(--cyan);
+}
+
+/* ---------- 步骤指示 ---------- */
+.indicator {
+  padding: 18px 22px 12px;
+  display:flex; gap:6px;
+}
+.indicator > div {
+  flex:1; height:3px;
+  background: rgba(255,255,255,0.08);
+  border-radius:2px;
+  position: relative;
+}
+.indicator > div.active {
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan-glow);
+}
+
+/* ---------- 内容区 ---------- */
+.body {
+  flex:1; padding: 16px 22px 22px;
+  overflow-y:auto;
+}
+.body::-webkit-scrollbar { width: 0; }
+
+.step-num {
+  display:inline-block;
+  font-family:'Oswald', sans-serif;
+  font-size:11px;
+  letter-spacing:3px;
+  font-weight:600;
+  color: var(--cyan);
+  text-transform:uppercase;
+  margin-bottom: 10px;
+}
+.step-title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -0.5px;
+  line-height: 1.05;
+  margin: 0 0 14px;
+}
+.body-text {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.status-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--muted);
+}
+.status-chip.granted {
+  background: rgba(0,174,239,0.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.status-chip.granted::before {
+  content: '✓';
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ---------- 底栏 ---------- */
+.bottombar {
+  padding: 16px 22px;
+  background: rgba(5,10,36,0.85);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan), #0080c7);
+  color: white;
+  padding: 13px 26px;
+  border-radius: 6px;
+  font-family:'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 24px var(--cyan-glow);
+  border:none;
+  cursor: pointer;
+}
+.btn-primary.gold {
+  background: linear-gradient(135deg, var(--gold), #d99a00);
+  color: #050a24;
+  box-shadow: 0 4px 24px rgba(255,199,44,0.4);
+}
+.btn-primary.full {
+  width:100%; text-align:center;
+}
+.btn-ghost {
+  color: var(--muted);
+  padding: 13px 14px;
+  font-family:'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  cursor:pointer;
+}
+.btn-ghost.disabled { color: var(--muted-2); }
+
+/* ---------- 联赛分组（球队选择）---------- */
+.league-header {
+  display:flex; align-items:center; gap:10px;
+  margin: 22px 0 10px;
+}
+.league-header .league-en {
+  font-family:'Oswald', sans-serif;
+  font-weight:700;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color: var(--cyan);
+}
+.league-header .league-count {
+  font-size:11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.league-header .league-line {
+  flex:1; height:1px;
+  background: linear-gradient(to right, rgba(0,174,239,0.4), transparent);
+}
+
+.team-row {
+  display:flex; align-items:center; gap:12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.025);
+  margin-bottom: 6px;
+}
+.team-row.on {
+  border-color: var(--cyan);
+  background: rgba(0,174,239,0.08);
+}
+.team-avatar {
+  width:36px; height:36px;
+  border-radius: 50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight:700;
+  font-size:13px;
+  color:white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.team-row .team-name {
+  flex:1;
+  font-weight: 600;
+  font-size: 15px;
+}
+.team-check {
+  width:22px; height:22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.18);
+  flex-shrink: 0;
+  position: relative;
+}
+.team-row.on .team-check {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.team-row.on .team-check::after {
+  content:'';
+  position:absolute; left:5px; top:1px;
+  width:6px; height:11px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* 球队主色（粗暴近似）*/
+.t-arsenal  { background: linear-gradient(135deg, #ef0107, #9b0000); }
+.t-city     { background: linear-gradient(135deg, #6cabdd, #1c5285); }
+.t-united   { background: linear-gradient(135deg, #da291c, #6c0e0e); }
+.t-chelsea  { background: linear-gradient(135deg, #034694, #021f4a); }
+.t-liverpool{ background: linear-gradient(135deg, #c8102e, #5a0612); }
+.t-spurs    { background: linear-gradient(135deg, #132257, #ffffff); color:#132257; text-shadow:none; }
+.t-barca    { background: linear-gradient(135deg, #a50044, #004d98); }
+.t-real     { background: linear-gradient(135deg, #ffffff, #d4d4d4); color:#00529F; text-shadow:none; }
+.t-atletico { background: linear-gradient(135deg, #cb3524, #ffffff); }
+.t-bayern   { background: linear-gradient(135deg, #dc052d, #0066b2); }
+.t-dortmund { background: linear-gradient(135deg, #fde100, #000000); color:#000; text-shadow:none; }
+.t-lever    { background: linear-gradient(135deg, #e32221, #000000); }
+.t-milan    { background: linear-gradient(135deg, #fb090b, #000000); }
+.t-inter    { background: linear-gradient(135deg, #0066b3, #000000); }
+.t-juve     { background: linear-gradient(135deg, #000000, #ffffff); }
+.t-napoli   { background: linear-gradient(135deg, #12a0d7, #003c8f); }
+.t-psg      { background: linear-gradient(135deg, #004170, #ed1c24); }
+.t-mar      { background: linear-gradient(135deg, #2faae1, #ffffff); color:#2faae1; text-shadow:none; }
+
+.selected-count {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(0,174,239,0.08);
+  border: 1px solid rgba(0,174,239,0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.selected-count .num {
+  font-family:'Oswald', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+/* ---------- 时间滑杆 ---------- */
+.time-row {
+  margin-top: 22px;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.time-row .label-row {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom: 4px;
+}
+.time-row .label-row .label {
+  font-size: 13px; color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family:'Oswald', sans-serif;
+}
+.time-row .time-value {
+  font-family:'Oswald', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--cyan);
+  line-height: 1.1;
+  letter-spacing: 1px;
+}
+.slider-track {
+  position:relative;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin: 18px 4px 6px;
+}
+.slider-fill {
+  position:absolute; left:0; top:0; height:100%;
+  background: linear-gradient(to right, var(--cyan), #0080c7);
+  border-radius: 2px;
+}
+.slider-thumb {
+  position:absolute; top:50%;
+  width: 18px; height: 18px;
+  background:white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px var(--cyan), 0 0 16px var(--cyan-glow);
+}
+.slider-ticks {
+  display:flex; justify-content:space-between;
+  font-family:'Oswald', sans-serif;
+  font-size:10px;
+  color: var(--muted-2);
+  padding: 0 2px;
+}
+
+/* ---------- 赛程页 ---------- */
+.section-date {
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  padding: 18px 0 10px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-date::after {
+  content:''; flex:1; height:1px;
+  background: linear-gradient(to right, rgba(0,174,239,0.4), transparent);
+}
+.section-date .date-num {
+  font-family:'Oswald', sans-serif;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.match-card {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.match-card::before {
+  content:'';
+  position: absolute; inset:0;
+  background: radial-gradient(circle at 100% 0%, rgba(0,174,239,0.10), transparent 50%);
+  pointer-events: none;
+}
+.match-card .comp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  position:relative; z-index:1;
+}
+.comp-pill {
+  display:inline-block;
+  font-family:'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--cyan);
+  color: white;
+  text-transform: uppercase;
+}
+.comp-pill.cl  { background: linear-gradient(135deg, #1d3a8a, #0a1340); border:1px solid var(--cyan); }
+.comp-pill.pl  { background: #3d195b; }
+.comp-pill.sa  { background: #008fd7; }
+.comp-pill.bl  { background: #d20515; }
+.comp-pill.pd  { background: #ee8707; }
+.comp-pill.fl  { background: #091c3e; border:1px solid var(--cyan); }
+
+.match-card .teams {
+  display:grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items:center;
+  margin: 14px 0 10px;
+  gap: 8px;
+  position:relative; z-index: 1;
+}
+.team-side {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.team-side .team-logo {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight:700;
+  font-size: 14px;
+  color: white;
+}
+.team-side .team-label {
+  font-family:'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  line-height: 1.1;
+}
+.vs-time {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width: 72px;
+}
+.vs-time .time {
+  font-family:'Oswald', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.vs-time .vs {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+.match-card .footer-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  position:relative; z-index: 1;
+}
+.reminder-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.reminder-tag.live { color: var(--cyan); }
+.reminder-tag::before {
+  content:''; width:6px; height:6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.match-check {
+  width:22px; height:22px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.2);
+  flex-shrink: 0;
+  position: relative;
+}
+.match-check.on {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.match-check.on::after {
+  content:''; position:absolute; left:4px; top:0;
+  width:7px; height:13px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ---------- 设置页 ---------- */
+.settings-section {
+  margin: 22px 0 6px;
+}
+.settings-section .label {
+  font-family:'Oswald', sans-serif;
+  font-size:11px;
+  letter-spacing:2.5px;
+  font-weight:700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+}
+.setting-row .setting-label {
+  flex: 1;
+}
+.setting-row .setting-label .title {
+  font-size: 14px;
+  font-weight: 500;
+}
+.setting-row .setting-label .sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.toggle {
+  width:42px; height:24px;
+  background: rgba(255,255,255,0.1);
+  border-radius:14px;
+  position:relative;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); }
+.toggle::after {
+  content:''; position:absolute; left:3px; top:3px;
+  width:18px; height:18px;
+  background:white; border-radius:50%;
+  transition: left .2s;
+}
+.toggle.on::after { left:21px; }
+
+.setting-team-row {
+  display:flex; align-items:center; padding: 10px 0;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.setting-team-row .team-info {
+  flex:1;
+}
+.setting-team-row .team-info .name { font-weight:600; font-size:14px; }
+.setting-team-row .team-info .league {
+  font-family:'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.help-text {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(255,199,44,0.08);
+  border: 1px solid rgba(255,199,44,0.2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--gold);
+  line-height: 1.5;
+}
+
+/* ---------- 屏幕标签 ---------- */
+.screen-label {
+  text-align: center;
+  margin-top: 20px;
+}
+.screen-label .num-tag {
+  display:inline-block;
+  font-family:'Oswald', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.screen-label .title {
+  font-family:'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: white;
+}
+.screen-label .sub {
+  display:block;
+  font-family:'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted-2);
+  font-size: 12px;
+  padding: 16px 24px 48px;
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <span class="badge">v1 UI · UCL EDITION</span>
+  <h1 class="cond">看球<span class="accent">不熬夜</span>闹钟</h1>
+  <p>参考欧冠官方网站的深色调 + 浓缩字体 + 蓝光重描的视觉版本。<br>
+  这只是视觉 mockup——真要把 App 改成这套深色主题，需要同步更新 KanqiuTheme（Compose 那边的色板和字体）。要不要做，等你看完决定。</p>
+</header>
+
+<div class="grid">
+
+<!-- ============== 1. 向导 Step 1: 通知权限 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="title">看球不熬夜闹钟</div>
+      <div class="icons"></div>
+    </div>
+    <div class="indicator">
+      <div class="active"></div><div></div><div></div><div></div>
+    </div>
+    <div class="body">
+      <div class="step-num">第 1 步 · 共 4 步</div>
+      <h2 class="step-title">开启<br>通知权限</h2>
+      <p class="body-text">
+        比赛开球前 15 分钟、深夜比赛次日早晨的录播提醒，都靠系统通知弹出来。Android 13 之后必须授权 App 才能发通知。
+      </p>
+      <div style="margin-top:24px;">
+        <span class="status-chip">尚未授权</span>
+      </div>
+      <div style="margin-top:24px;">
+        <button class="btn-primary">授予通知权限</button>
+      </div>
+      <p class="body-text" style="margin-top:16px; font-size:12px;">
+        系统弹窗里点了"不允许"也没关系，稍后到 系统设置 → 应用 → 看球不熬夜闹钟 → 通知 里能再开。
+      </p>
+    </div>
+    <div class="bottombar">
+      <button class="btn-ghost disabled">← 上一步</button>
+      <button class="btn-primary">下一步 →</button>
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">01 / 06</div>
+    <div class="title">向导 · 通知权限</div>
+    <span class="sub">未授权态</span>
+  </div>
+</div>
+
+<!-- ============== 2. 向导 Step 2: 精确闹钟 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="title">看球不熬夜闹钟</div>
+      <div class="icons"></div>
+    </div>
+    <div class="indicator">
+      <div class="active"></div><div class="active"></div><div></div><div></div>
+    </div>
+    <div class="body">
+      <div class="step-num">第 2 步 · 共 4 步</div>
+      <h2 class="step-title">开启<br>精确闹钟权限</h2>
+      <p class="body-text">
+        Android 12 之后系统默认禁止 App 排"按秒触发"的精确闹钟。不开的话，提醒可能被系统省电策略拖延几分钟到几十分钟，深夜比赛的录播提醒尤其容易迟到。
+      </p>
+      <div style="margin-top:24px;">
+        <span class="status-chip granted">精确闹钟权限已开启</span>
+      </div>
+      <p class="body-text" style="margin-top:16px; font-size:12px;">
+        已授权用户看到这条；未授权时会有"打开系统设置"按钮。
+      </p>
+    </div>
+    <div class="bottombar">
+      <button class="btn-ghost">← 上一步</button>
+      <button class="btn-primary">下一步 →</button>
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">02 / 06</div>
+    <div class="title">向导 · 精确闹钟</div>
+    <span class="sub">已授权态</span>
+  </div>
+</div>
+
+<!-- ============== 3. 向导 Step 3: 球队选择 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="title">看球不熬夜闹钟</div>
+      <div class="icons"></div>
+    </div>
+    <div class="indicator">
+      <div class="active"></div><div class="active"></div><div class="active"></div><div></div>
+    </div>
+    <div class="body">
+      <div class="step-num">第 3 步 · 共 4 步</div>
+      <h2 class="step-title">选择关注球队</h2>
+      <p class="body-text">至少选 1 支才能继续。之后可在设置页随时增减。</p>
+
+      <div class="league-header">
+        <span class="league-en">PREMIER LEAGUE</span>
+        <span class="league-count">6 / 6</span>
+        <div class="league-line"></div>
+      </div>
+      <div class="team-row on"><div class="team-avatar t-arsenal">阿森</div><div class="team-name">阿森纳</div><div class="team-check"></div></div>
+      <div class="team-row on"><div class="team-avatar t-city">曼城</div><div class="team-name">曼城</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-united">曼联</div><div class="team-name">曼联</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-chelsea">切尔</div><div class="team-name">切尔西</div><div class="team-check"></div></div>
+      <div class="team-row on"><div class="team-avatar t-liverpool">利物</div><div class="team-name">利物浦</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-spurs">热刺</div><div class="team-name">热刺</div><div class="team-check"></div></div>
+
+      <div class="league-header">
+        <span class="league-en">LA LIGA</span>
+        <span class="league-count">3 / 3</span>
+        <div class="league-line"></div>
+      </div>
+      <div class="team-row on"><div class="team-avatar t-barca">巴萨</div><div class="team-name">巴萨</div><div class="team-check"></div></div>
+      <div class="team-row on"><div class="team-avatar t-real">皇马</div><div class="team-name">皇马</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-atletico">马竞</div><div class="team-name">马竞</div><div class="team-check"></div></div>
+
+      <div class="league-header">
+        <span class="league-en">BUNDESLIGA</span>
+        <span class="league-count">3 / 3</span>
+        <div class="league-line"></div>
+      </div>
+      <div class="team-row on"><div class="team-avatar t-bayern">拜仁</div><div class="team-name">拜仁慕尼黑</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-dortmund">多特</div><div class="team-name">多特蒙德</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-lever">勒沃</div><div class="team-name">勒沃库森</div><div class="team-check"></div></div>
+
+      <div class="league-header">
+        <span class="league-en">SERIE A</span>
+        <span class="league-count">4 / 4</span>
+        <div class="league-line"></div>
+      </div>
+      <div class="team-row"><div class="team-avatar t-milan">AC米</div><div class="team-name">AC米兰</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-inter">国际</div><div class="team-name">国际米兰</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-juve">尤文</div><div class="team-name">尤文图斯</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-napoli">那不</div><div class="team-name">那不勒斯</div><div class="team-check"></div></div>
+
+      <div class="league-header">
+        <span class="league-en">LIGUE 1</span>
+        <span class="league-count">2 / 2</span>
+        <div class="league-line"></div>
+      </div>
+      <div class="team-row on"><div class="team-avatar t-psg">巴黎</div><div class="team-name">巴黎圣日耳曼</div><div class="team-check"></div></div>
+      <div class="team-row"><div class="team-avatar t-mar">马赛</div><div class="team-name">马赛</div><div class="team-check"></div></div>
+
+      <div class="selected-count">
+        <span>已选关注球队</span><span class="num">6 / 18</span>
+      </div>
+    </div>
+    <div class="bottombar">
+      <button class="btn-ghost">← 上一步</button>
+      <button class="btn-primary">下一步 →</button>
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">03 / 06</div>
+    <div class="title">向导 · 球队选择</div>
+    <span class="sub">18 支俱乐部按联赛分组 · 已选 6 支</span>
+  </div>
+</div>
+
+<!-- ============== 4. 向导 Step 4: 时间 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="title">看球不熬夜闹钟</div>
+      <div class="icons"></div>
+    </div>
+    <div class="indicator">
+      <div class="active"></div><div class="active"></div><div class="active"></div><div class="active"></div>
+    </div>
+    <div class="body">
+      <div class="step-num">第 4 步 · 共 4 步</div>
+      <h2 class="step-title">录播提醒时间</h2>
+      <p class="body-text">
+        深夜 / 凌晨开球的比赛，会在第二天早晨这个时间提醒你看录播。工作日和节假日可分别设置。
+      </p>
+
+      <div class="time-row">
+        <div class="label-row">
+          <span class="label">工作日早晨</span>
+          <span class="time-value">07:00</span>
+        </div>
+        <div class="slider-track">
+          <div class="slider-fill" style="width: calc((7 - 5) / 7 * 100%)"></div>
+          <div class="slider-thumb" style="left: calc((7 - 5) / 7 * 100%)"></div>
+        </div>
+        <div class="slider-ticks">
+          <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+        </div>
+      </div>
+
+      <div class="time-row">
+        <div class="label-row">
+          <span class="label">节假日早晨</span>
+          <span class="time-value">08:00</span>
+        </div>
+        <div class="slider-track">
+          <div class="slider-fill" style="width: calc((8 - 5) / 7 * 100%)"></div>
+          <div class="slider-thumb" style="left: calc((8 - 5) / 7 * 100%)"></div>
+        </div>
+        <div class="slider-ticks">
+          <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+        </div>
+      </div>
+
+      <div class="help-text">
+        提示：开球时间在 09:00–22:00 之间的比赛，按"开球前 15 分钟"提醒，不受这个早晨时间影响。
+      </div>
+    </div>
+    <div class="bottombar">
+      <button class="btn-ghost">← 上一步</button>
+      <button class="btn-primary gold">完成，开始用 ✓</button>
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">04 / 06</div>
+    <div class="title">向导 · 提醒时间</div>
+    <span class="sub">5–12 点滑杆 · 完成按钮金色 CTA</span>
+  </div>
+</div>
+
+<!-- ============== 5. 赛程页 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="title">本周赛程</div>
+      <div class="icons"><span>↻</span><span>⚙</span></div>
+    </div>
+    <div class="body" style="padding-top: 6px;">
+
+      <div class="section-date">
+        <span class="date-num">5月17日</span><span>周六</span>
+      </div>
+
+      <div class="match-card">
+        <div class="comp-row">
+          <span class="comp-pill pl">PREMIER LEAGUE</span>
+          <span style="font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); letter-spacing:1px;">英超 第 37 轮</span>
+        </div>
+        <div class="teams">
+          <div class="team-side">
+            <div class="team-logo t-liverpool">利</div>
+            <div class="team-label">利物浦</div>
+          </div>
+          <div class="vs-time">
+            <div class="time">22:00</div>
+            <div class="vs">VS</div>
+          </div>
+          <div class="team-side">
+            <div class="team-logo" style="background:linear-gradient(135deg,#7e1431,#3a0613);">阿</div>
+            <div class="team-label">阿斯顿维拉</div>
+          </div>
+        </div>
+        <div class="footer-row">
+          <span class="reminder-tag">REPLAY · 次日 08:00</span>
+          <div class="match-check on"></div>
+        </div>
+      </div>
+
+      <div class="match-card">
+        <div class="comp-row">
+          <span class="comp-pill pl">PREMIER LEAGUE</span>
+          <span style="font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); letter-spacing:1px;">英超 第 37 轮</span>
+        </div>
+        <div class="teams">
+          <div class="team-side">
+            <div class="team-logo t-city">城</div>
+            <div class="team-label">曼城</div>
+          </div>
+          <div class="vs-time">
+            <div class="time">22:00</div>
+            <div class="vs">VS</div>
+          </div>
+          <div class="team-side">
+            <div class="team-logo t-chelsea">切</div>
+            <div class="team-label">切尔西</div>
+          </div>
+        </div>
+        <div class="footer-row">
+          <span class="reminder-tag">REPLAY · 次日 08:00</span>
+          <div class="match-check"></div>
+        </div>
+      </div>
+
+      <div class="section-date">
+        <span class="date-num">5月18日</span><span>周日</span>
+      </div>
+
+      <div class="match-card">
+        <div class="comp-row">
+          <span class="comp-pill pd">LA LIGA</span>
+          <span style="font-family:'Oswald',sans-serif; font-size:10px; color:var(--muted); letter-spacing:1px;">国家德比</span>
+        </div>
+        <div class="teams">
+          <div class="team-side">
+            <div class="team-logo t-real">皇</div>
+            <div class="team-label">皇马</div>
+          </div>
+          <div class="vs-time">
+            <div class="time">03:00</div>
+            <div class="vs">VS</div>
+          </div>
+          <div class="team-side">
+            <div class="team-logo t-barca">巴</div>
+            <div class="team-label">巴萨</div>
+          </div>
+        </div>
+        <div class="footer-row">
+          <span class="reminder-tag">REPLAY · 当日 08:00</span>
+          <div class="match-check on"></div>
+        </div>
+      </div>
+
+      <div class="match-card">
+        <div class="comp-row">
+          <span class="comp-pill cl">UEFA CHAMPIONS LEAGUE</span>
+          <span style="font-family:'Oswald',sans-serif; font-size:10px; color:var(--cyan); letter-spacing:1px;">半决赛 次回合</span>
+        </div>
+        <div class="teams">
+          <div class="team-side">
+            <div class="team-logo t-bayern">拜</div>
+            <div class="team-label">拜仁慕尼黑</div>
+          </div>
+          <div class="vs-time">
+            <div class="time">03:00</div>
+            <div class="vs">VS</div>
+          </div>
+          <div class="team-side">
+            <div class="team-logo t-psg">巴</div>
+            <div class="team-label">巴黎圣日耳曼</div>
+          </div>
+        </div>
+        <div class="footer-row">
+          <span class="reminder-tag live">LIVE · 开球前 02:45</span>
+          <div class="match-check on"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="bottombar">
+      <button class="btn-primary full">
+        确认提醒选择 · 已选 3 场
+      </button>
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">05 / 06</div>
+    <div class="title">赛程页</div>
+    <span class="sub">广播风格 match card · 直播 / 录播双色标识</span>
+  </div>
+</div>
+
+<!-- ============== 6. 设置页 ============== -->
+<div>
+  <div class="phone"><div class="screen">
+    <div class="topbar">
+      <div class="back">←</div>
+      <div class="title">设置</div>
+      <div class="icons"></div>
+    </div>
+    <div class="body">
+      <div class="settings-section">
+        <div class="label">关注球队（18）</div>
+        <div class="setting-team-row">
+          <div class="team-avatar t-arsenal">阿森</div>
+          <div class="team-info"><div class="name">阿森纳</div><div class="league">PREMIER LEAGUE</div></div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="setting-team-row">
+          <div class="team-avatar t-city">曼城</div>
+          <div class="team-info"><div class="name">曼城</div><div class="league">PREMIER LEAGUE</div></div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="setting-team-row">
+          <div class="team-avatar t-united">曼联</div>
+          <div class="team-info"><div class="name">曼联</div><div class="league">PREMIER LEAGUE</div></div>
+          <div class="toggle"></div>
+        </div>
+        <div class="setting-team-row">
+          <div class="team-avatar t-real">皇马</div>
+          <div class="team-info"><div class="name">皇马</div><div class="league">LA LIGA</div></div>
+          <div class="toggle on"></div>
+        </div>
+        <div style="text-align:center; padding:8px 0; font-family:'Oswald'; font-size:11px; color:var(--muted-2); letter-spacing:2px;">⋯ 还有 14 支 ⋯</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="label">提醒设置</div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="title">开球前 15 分钟提醒</div>
+            <div class="sub">09:00 — 22:00 比赛</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="title">早晨录播提醒</div>
+            <div class="sub">深夜 / 凌晨比赛</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="label">早晨时间</div>
+        <div class="time-row" style="margin-top:8px;">
+          <div class="label-row">
+            <span class="label">工作日</span>
+            <span class="time-value">07:00</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-fill" style="width: calc((7 - 5) / 7 * 100%)"></div>
+            <div class="slider-thumb" style="left: calc((7 - 5) / 7 * 100%)"></div>
+          </div>
+        </div>
+        <div class="time-row">
+          <div class="label-row">
+            <span class="label">节假日</span>
+            <span class="time-value">08:00</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-fill" style="width: calc((8 - 5) / 7 * 100%)"></div>
+            <div class="slider-thumb" style="left: calc((8 - 5) / 7 * 100%)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="label">测试 & 工具</div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="title">立即发送测试通知</div>
+            <div class="sub">验证通知权限和通知渠道</div>
+          </div>
+          <span style="color:var(--cyan); font-family:'Oswald'; font-size:11px; letter-spacing:1.5px;">运行</span>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="title">2 分钟后提醒测试</div>
+            <div class="sub">验证 AlarmManager + 后台保活</div>
+          </div>
+          <span style="color:var(--cyan); font-family:'Oswald'; font-size:11px; letter-spacing:1.5px;">运行</span>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="title">MagicOS 后台保活引导</div>
+            <div class="sub">荣耀 / 华为手机必看</div>
+          </div>
+          <span style="color:var(--muted); font-size:18px;">›</span>
+        </div>
+      </div>
+
+    </div>
+  </div></div>
+  <div class="screen-label">
+    <div class="num-tag">06 / 06</div>
+    <div class="title">设置页</div>
+    <span class="sub">深色 + 联赛英文小标签 + 青光开关</span>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  字体：Barlow Condensed（标题）/ Oswald（数字 & 标签）/ Inter（正文）—— Google Fonts CDN 加载，无网时回退到系统字体<br>
+  设计灵感来自 uefa.com/uefachampionsleague · 不代表与 UEFA 有任何关联
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#FFC8102E</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+</resources>

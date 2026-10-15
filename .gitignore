@@ -1,0 +1,26 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+/build
+# 各模块（如 app/）的编译产物目录，bare 形式可匹配任意层级
+build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.apk
+*.aab
+*.zip
+*.tmp
+*.keystore
+*.jks
+release/
+app/release/
+
+# AI 助手记忆目录（含本机路径、keystore 指纹等），绝不入库
+.workbuddy/
+
+# 签名密码不进 git
+signing.properties
+/app/signing.properties

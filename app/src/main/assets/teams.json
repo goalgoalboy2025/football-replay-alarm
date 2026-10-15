@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "lastUpdated": "2026-05-17",
+  "note": "v1 公开版默认关注 18 支欧洲俱乐部豪门，国家队完全移除。team id 由 v0.1 经验填写——id=4/5/73/98/108/109/113/516/524 在 v0.1 没用过，公开发布前请对照 https://api.football-data.org/v4/competitions/{CODE}/teams 实际响应再核一遍。",
+  "teams": [
+    { "id": 57,  "type": "CLUB", "nameZh": "阿森纳",       "nameEn": "Arsenal FC",                  "country": "England", "league": "英超" },
+    { "id": 65,  "type": "CLUB", "nameZh": "曼城",         "nameEn": "Manchester City FC",          "country": "England", "league": "英超" },
+    { "id": 66,  "type": "CLUB", "nameZh": "曼联",         "nameEn": "Manchester United FC",        "country": "England", "league": "英超" },
+    { "id": 61,  "type": "CLUB", "nameZh": "切尔西",       "nameEn": "Chelsea FC",                  "country": "England", "league": "英超" },
+    { "id": 64,  "type": "CLUB", "nameZh": "利物浦",       "nameEn": "Liverpool FC",                "country": "England", "league": "英超" },
+    { "id": 73,  "type": "CLUB", "nameZh": "热刺",         "nameEn": "Tottenham Hotspur FC",        "country": "England", "league": "英超" },
+
+    { "id": 81,  "type": "CLUB", "nameZh": "巴萨",         "nameEn": "FC Barcelona",                "country": "Spain",   "league": "西甲" },
+    { "id": 86,  "type": "CLUB", "nameZh": "皇马",         "nameEn": "Real Madrid CF",              "country": "Spain",   "league": "西甲" },
+    { "id": 78,  "type": "CLUB", "nameZh": "马竞",         "nameEn": "Club Atlético de Madrid",     "country": "Spain",   "league": "西甲" },
+
+    { "id": 5,   "type": "CLUB", "nameZh": "拜仁慕尼黑",   "nameEn": "FC Bayern München",           "country": "Germany", "league": "德甲" },
+    { "id": 4,   "type": "CLUB", "nameZh": "多特蒙德",     "nameEn": "Borussia Dortmund",           "country": "Germany", "league": "德甲" },
+    { "id": 3,   "type": "CLUB", "nameZh": "勒沃库森",     "nameEn": "Bayer 04 Leverkusen",         "country": "Germany", "league": "德甲" },
+
+    { "id": 98,  "type": "CLUB", "nameZh": "AC米兰",       "nameEn": "AC Milan",                    "country": "Italy",   "league": "意甲" },
+    { "id": 108, "type": "CLUB", "nameZh": "国际米兰",     "nameEn": "FC Internazionale Milano",    "country": "Italy",   "league": "意甲" },
+    { "id": 109, "type": "CLUB", "nameZh": "尤文图斯",     "nameEn": "Juventus FC",                 "country": "Italy",   "league": "意甲" },
+    { "id": 113, "type": "CLUB", "nameZh": "那不勒斯",     "nameEn": "SSC Napoli",                  "country": "Italy",   "league": "意甲" },
+
+    { "id": 524, "type": "CLUB", "nameZh": "巴黎圣日耳曼", "nameEn": "Paris Saint-Germain FC",      "country": "France",  "league": "法甲" },
+    { "id": 516, "type": "CLUB", "nameZh": "马赛",         "nameEn": "Olympique de Marseille",      "country": "France",  "league": "法甲" }
+  ]
+}
