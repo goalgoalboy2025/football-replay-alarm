@@ -1,6 +1,5 @@
 package io.github.dandan.kanqiutixing.data
 
-import io.github.dandan.kanqiutixing.BuildConfig
 import io.github.dandan.kanqiutixing.data.config.TeamNameTranslator
 import io.github.dandan.kanqiutixing.data.local.MatchDao
 import io.github.dandan.kanqiutixing.data.local.MatchEntity
@@ -21,7 +20,8 @@ class MatchRepository @Inject constructor(
     private val matchDao: MatchDao,
     private val teamDao: TeamDao,
     private val settingsRepository: SettingsRepository,
-    private val translator: TeamNameTranslator
+    private val translator: TeamNameTranslator,
+    private val tokenProvider: TokenProvider
 ) {
 
     fun observeMatches(fromMillis: Long, toMillis: Long): Flow<List<MatchEntity>> =
@@ -59,11 +59,14 @@ class MatchRepository @Inject constructor(
         dateFrom: String,
         dateTo: String
     ): List<MatchEntity> {
+        // 双轨制取 token：用户在设置页填的优先，没填才回退构建期注入的
+        val token = tokenProvider.token()
+        if (token.isBlank()) throw MissingTokenException()
         val resp = api.getCompetitionMatches(
             competitionCode = competitionCode,
             dateFrom = dateFrom,
             dateTo = dateTo,
-            token = BuildConfig.FOOTBALL_DATA_TOKEN
+            token = token
         )
         val enabledTypes = settingsRepository.enabledCompetitionTypes()
         // 写库前先取出"已勾选"的比赛 id，写新数据时保留用户的选择

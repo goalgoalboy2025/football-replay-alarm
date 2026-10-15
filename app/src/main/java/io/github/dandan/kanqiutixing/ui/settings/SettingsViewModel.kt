@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.dandan.kanqiutixing.data.Settings
 import io.github.dandan.kanqiutixing.data.SettingsRepository
+import io.github.dandan.kanqiutixing.data.TokenProvider
+import io.github.dandan.kanqiutixing.data.TokenSource
 import io.github.dandan.kanqiutixing.data.config.TeamConfigLoader
 import io.github.dandan.kanqiutixing.data.local.TeamDao
 import io.github.dandan.kanqiutixing.data.local.TeamEntity
+import io.github.dandan.kanqiutixing.data.remote.FootballDataOrgApi
 import io.github.dandan.kanqiutixing.notification.MatchReminderScheduler
 import io.github.dandan.kanqiutixing.notification.NotificationHelper
 import io.github.dandan.kanqiutixing.notification.ReminderDiagnostics
@@ -19,6 +22,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+import java.time.LocalDate
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -33,7 +39,9 @@ class SettingsViewModel @Inject constructor(
     private val teamConfigLoader: TeamConfigLoader,
     private val notificationHelper: NotificationHelper,
     private val matchReminderScheduler: MatchReminderScheduler,
-    private val reminderDiagnostics: ReminderDiagnostics
+    private val reminderDiagnostics: ReminderDiagnostics,
+    private val tokenProvider: TokenProvider,
+    private val api: FootballDataOrgApi
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> =
@@ -49,8 +57,88 @@ class SettingsViewModel @Inject constructor(
     private val _diagnostics = MutableStateFlow("读取中…")
     val diagnostics: StateFlow<String> = _diagnostics
 
+    // ── 数据源 token（双轨制：用户在 App 内填的优先于构建期注入的）──────────
+
+    /** 输入框内容 */
+    private val _tokenInput = MutableStateFlow("")
+    val tokenInput: StateFlow<String> = _tokenInput
+
+    /** 当前实际生效的 token 来自哪里，用于给用户一句人话说明 */
+    private val _tokenSource = MutableStateFlow(TokenSource.NONE)
+    val tokenSource: StateFlow<TokenSource> = _tokenSource
+
+    /** 测试连接的结果文案；null = 还没测过 */
+    private val _tokenTestResult = MutableStateFlow<String?>(null)
+    val tokenTestResult: StateFlow<String?> = _tokenTestResult
+
+    private val _tokenTesting = MutableStateFlow(false)
+    val tokenTesting: StateFlow<Boolean> = _tokenTesting
+
     init {
         refreshDiagnostics()
+        viewModelScope.launch {
+            _tokenInput.value = settingsRepository.getApiToken()
+            _tokenSource.value = tokenProvider.resolve().source
+        }
+    }
+
+    fun onTokenInputChange(v: String) {
+        _tokenInput.value = v
+        _tokenTestResult.value = null
+    }
+
+    /**
+     * 用输入框里的 token 真的打一次 API，验证通过才保存。
+     *
+     * 先测后存，是为了避免用户手滑粘错字符后：App 静默存了个坏 token，
+     * 之后每次同步都 403，而用户完全不知道问题出在哪。
+     */
+    fun testAndSaveToken() {
+        val raw = _tokenInput.value.trim()
+        if (raw.isBlank()) {
+            _tokenTestResult.value = "请先填入 token"
+            return
+        }
+        viewModelScope.launch {
+            _tokenTesting.value = true
+            _tokenTestResult.value = "正在连接 football-data.org …"
+            try {
+                val today = LocalDate.now()
+                val resp = api.getCompetitionMatches(
+                    competitionCode = "PL",
+                    dateFrom = today.toString(),
+                    dateTo = today.plusDays(7).toString(),
+                    token = raw
+                )
+                settingsRepository.setApiToken(raw)
+                _tokenSource.value = TokenSource.USER
+                _tokenTestResult.value =
+                    "连接成功。未来 7 天英超有 ${resp.matches.size} 场比赛，token 已保存"
+            } catch (e: HttpException) {
+                _tokenTestResult.value = when (e.code()) {
+                    400 -> "请求被拒（400）：token 格式不对，请检查是否复制完整"
+                    403 -> "token 无效（403）：请确认复制正确，且注册邮箱已完成验证"
+                    429 -> "请求太频繁（429）：免费档限 10 次/分钟，请稍等一分钟再试"
+                    else -> "连接失败：HTTP ${e.code()}"
+                }
+            } catch (e: IOException) {
+                _tokenTestResult.value = "网络不通：${e.message ?: "请检查网络后重试"}"
+            } catch (e: Exception) {
+                _tokenTestResult.value = "连接失败：${e.message ?: e.javaClass.simpleName}"
+            } finally {
+                _tokenTesting.value = false
+            }
+        }
+    }
+
+    /** 清空用户填写的 token，回退到构建期注入的值（本地开发版通常才有） */
+    fun clearToken() {
+        viewModelScope.launch {
+            settingsRepository.setApiToken("")
+            _tokenInput.value = ""
+            _tokenSource.value = tokenProvider.resolve().source
+            _tokenTestResult.value = "已清除，现在使用 App 内置的 token"
+        }
     }
 
     fun refreshDiagnostics() {

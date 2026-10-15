@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import io.github.dandan.kanqiutixing.data.MatchRepository
+import io.github.dandan.kanqiutixing.data.MissingTokenException
 import io.github.dandan.kanqiutixing.data.SyncStatusStore
 import io.github.dandan.kanqiutixing.data.local.MatchEntity
 import io.github.dandan.kanqiutixing.data.remote.FREE_TIER_COMPETITIONS
@@ -127,6 +128,13 @@ class WeeklyScheduleWorker @AssistedInject constructor(
             syncStatus.record(unique.size, selected.size, null)
             Log.i(TAG, "同步成功：共 ${unique.size} 场比赛，其中已选 ${selected.size} 场已排提醒")
             Result.success()
+        } catch (e: MissingTokenException) {
+            // 用户没填、构建期也没注入：重试多少次都不会成功。
+            // 直接失败并把原因写进同步状态，让设置页/健康检查页能明确提示去填 token，
+            // 而不是让用户看到一个含糊的"同步失败"。
+            Log.e(TAG, "未配置数据源 token：${e.message}")
+            syncStatus.record(0, 0, "未配置数据源 token：请在 设置 → 数据源 填入")
+            Result.failure()
         } catch (e: HttpException) {
             // football-data.org 错误码：
             //   400 请求格式不对 / 403 Key 错或越权 / 429 短时间内 req 过多 / 5xx 服务端
@@ -152,7 +160,7 @@ class WeeklyScheduleWorker @AssistedInject constructor(
 
     private fun httpHint(code: Int) = when (code) {
         400 -> "请求格式不对"
-        403 -> "API token 无效或越权，检查 local.properties 里的 FOOTBALL_DATA_TOKEN"
+        403 -> "API token 无效或越权，请在 设置 → 数据源 重新填入自己的 token"
         429 -> "请求太频繁，被限速"
         in 500..599 -> "数据源服务端故障"
         else -> "未知"

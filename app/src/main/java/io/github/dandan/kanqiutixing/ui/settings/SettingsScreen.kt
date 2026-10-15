@@ -27,9 +27,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.dandan.kanqiutixing.BuildConfig
+import io.github.dandan.kanqiutixing.data.TokenSource
 import io.github.dandan.kanqiutixing.data.local.TeamEntity
 import io.github.dandan.kanqiutixing.work.WeeklyScheduleWorker
 
@@ -43,6 +48,10 @@ fun SettingsScreen(
     val state by vm.uiState.collectAsState()
     val verdict by vm.verdict.collectAsState()
     val diagnostics by vm.diagnostics.collectAsState()
+    val tokenInput by vm.tokenInput.collectAsState()
+    val tokenSource by vm.tokenSource.collectAsState()
+    val tokenTesting by vm.tokenTesting.collectAsState()
+    val tokenTestResult by vm.tokenTestResult.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val ctx = LocalContext.current
 
@@ -73,6 +82,28 @@ fun SettingsScreen(
         ) {
             val clubs = state.teams.filter { it.type == "CLUB" }
             val nationals = state.teams.filter { it.type == "NATIONAL" }
+
+            // 放最前面：没有数据源 token 就一条赛程都拉不到，这是装上后第一件要做的事
+            SectionTitle("数据源")
+            TokenSection(
+                input = tokenInput,
+                source = tokenSource,
+                testing = tokenTesting,
+                testResult = tokenTestResult,
+                onInputChange = vm::onTokenInputChange,
+                onTest = vm::testAndSaveToken,
+                onClear = vm::clearToken,
+                onOpenSignup = {
+                    runCatching {
+                        ctx.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://www.football-data.org/account")
+                            )
+                        )
+                    }.onFailure { Log.w("SettingsScreen", "打开注册页失败", it) }
+                }
+            )
 
             SectionTitle("俱乐部 (${clubs.size})")
             clubs.forEach { TeamRow(it) { vm.toggleTeamEnabled(it) } }
@@ -234,6 +265,93 @@ private fun openBatterySettings(ctx: Context) {
         ctx.startActivity(Intent(SystemSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
     } catch (e: Exception) {
         Log.w("KanqiuSettings", "无法打开电池设置页", e)
+    }
+}
+
+/**
+ * 数据源 token 输入区。
+ *
+ * 公开发布的 APK 里不带任何 token（会烧进 dex 被人拿走耗光配额），
+ * 所以用户必须自己填一个免费的。这里做成"先测通再保存"，
+ * 避免用户粘错字符后 App 静默存个坏 token、之后每次同步都 403 却不知道问题在哪。
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TokenSection(
+    input: String,
+    source: TokenSource,
+    testing: Boolean,
+    testResult: String?,
+    onInputChange: (String) -> Unit,
+    onTest: () -> Unit,
+    onClear: () -> Unit,
+    onOpenSignup: () -> Unit
+) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        val (sourceText, sourceColor) = when (source) {
+            TokenSource.USER ->
+                "正在使用你填写的 token（只存在本机）" to MaterialTheme.colorScheme.primary
+            TokenSource.BUILD ->
+                "正在使用 App 内置的 token（本地开发版）" to MaterialTheme.colorScheme.secondary
+            TokenSource.NONE ->
+                "尚未配置 token，现在拉不到任何赛程" to MaterialTheme.colorScheme.error
+        }
+        Text(
+            sourceText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = sourceColor,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        OutlinedTextField(
+            value = input,
+            onValueChange = onInputChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("football-data.org API token") },
+            placeholder = { Text("粘贴注册后拿到的 token") },
+            supportingText = { Text("免费注册即得；只保存在本机，不会上传到任何服务器") },
+            singleLine = true,
+            enabled = !testing,
+            // 遮挡：设置页可能被截图发到群里求助，别把 token 一起截出去
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            )
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = onTest,
+                enabled = !testing,
+                modifier = Modifier.weight(1f)
+            ) { Text(if (testing) "测试中…" else "测试并保存") }
+            OutlinedButton(
+                onClick = onOpenSignup,
+                modifier = Modifier.weight(1f)
+            ) { Text("去注册") }
+            if (source == TokenSource.USER) {
+                OutlinedButton(onClick = onClear, enabled = !testing) { Text("清除") }
+            }
+        }
+
+        if (testResult != null) {
+            Spacer(Modifier.height(8.dp))
+            val ok = testResult.startsWith("连接成功")
+            Text(
+                testResult,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (ok) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 

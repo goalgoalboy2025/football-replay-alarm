@@ -1,7 +1,7 @@
 {
-  "version": 3,
-  "lastUpdated": "2026-05-17",
-  "note": "v1 公开版默认关注 18 支欧洲俱乐部豪门，国家队完全移除。team id 由 v0.1 经验填写——id=4/5/73/98/108/109/113/516/524 在 v0.1 没用过，公开发布前请对照 https://api.football-data.org/v4/competitions/{CODE}/teams 实际响应再核一遍。",
+  "version": 4,
+  "lastUpdated": "2026-10-15",
+  "note": "v1 公开版默认关注 18 支欧洲俱乐部豪门，国家队完全移除。全部 18 个 team id 已于 2026-10-15 对照 https://api.football-data.org/v4/competitions/{CODE}/teams 逐一核实：id 与英文名 18/18 全部一致（此前 4/5/73/98/108/109/113/516/524 为待核实项，已确认无误）。端到端验证：拉取 2026-10-15~10-22 的 PL/PD/BL1/SA/FL1/CL 六个联赛赛程，18 支球队全部能匹配到比赛。欧冠（CL）在 football-data.org 免费档可用。",
   "teams": [
     { "id": 57,  "type": "CLUB", "nameZh": "阿森纳",       "nameEn": "Arsenal FC",                  "country": "England", "league": "英超" },
     { "id": 65,  "type": "CLUB", "nameZh": "曼城",         "nameEn": "Manchester City FC",          "country": "England", "league": "英超" },

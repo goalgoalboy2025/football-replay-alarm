@@ -23,6 +23,11 @@
 
 ### 修复
 
+- **真实比赛提醒在隔夜后不触发（2 分钟测试却正常）**：根因是真实提醒用 `setExactAndAllowWhileIdle` 登记长延迟闹钟，在荣耀 MagicOS 等激进省电 ROM 上，App 熄屏一整夜被"冻结/深度睡眠"后，闹钟到点送不出来；而 2 分钟测试是刚从前台点完按钮、延迟又短，系统来不及冻结，所以一直能响，掩盖了问题。
+  - 改为用 `AlarmManager.setAlarmClock()` 登记提醒——这是 Android 里唯一被系统及各家 OEM ROM 当作"用户闹钟"对待、能穿透 Doze + 应用待机 + 厂商冻结按时送达的闹钟类型（系统时钟 App 用的就是它）。
+  - 测试闹钟改走同一条 `setAlarmClock` 路径，使"2 分钟测试"的结果真正代表真实提醒的送达能力。
+  - 无精确闹钟权限时退回 `setAndAllowWhileIdle` 并打 WARN 日志（正常机型不会走到，因已声明 `USE_EXACT_ALARM`）。
+  - 行为变化：设置提醒后状态栏会出现系统闹钟图标、锁屏可见"下一个闹钟"——对一个"看球闹钟"是符合预期的。
 - **通知太安静，容易被 ROM 吞掉**：录播提醒渠道原来用 `IMPORTANCE_DEFAULT`（三个渠道里最安静的，
   而它恰恰是早晨睡梦中最需要响的场景）→ 三个渠道统一 `IMPORTANCE_HIGH`；
   通知补上显式铃声（USAGE_ALARM）、震动、`CATEGORY_ALARM`、锁屏可见、绕过免打扰。
@@ -40,15 +45,41 @@
 - `MatchReminderScheduler` 新增 `NotificationHelper` 依赖（补弹用）
 - `NotificationDao` 新增 `countFired()` / `getAllPendingSorted()`
 
-## [Unreleased]
+## [1.1.0] — 2026-10-15
+
+为公开发布做准备：数据源 token 不再随 APK 分发，同时修掉几个会让人"以为 App 坏了"的问题。
+
+### 新增
+
+- **数据源 token 双轨制**（`data/TokenProvider.kt`）：用户在 设置 → 数据源 填的 token 优先，
+  没填才回退构建期注入的 `BuildConfig.FOOTBALL_DATA_TOKEN`。
+  - 开发者：把 token 写进 `local.properties`，clone 下来就能跑，不用先注册账号
+  - 发布者：`local.properties` 留空后构建，APK 里不含任何 token，配额归使用者自己
+- **设置页「数据源」分区**：token 输入框（密码遮挡，避免截图时泄露）+ 去注册 +
+  **测试并保存**——先真打一次 API，通过才写入，避免用户粘错字符后 App 静默存个坏 token、
+  之后每次同步都 403 却不知道问题在哪。
+- **构建期 token 泄露告警**（`app/build.gradle.kts`）：构建 release 且 `local.properties`
+  里有非空 token 时打印醒目警告，提醒清空后再出对外分发的包。
 
 ### 修复
 
-- **真实比赛提醒在隔夜后不触发（2 分钟测试却正常）**：根因是真实提醒用 `setExactAndAllowWhileIdle` 登记长延迟闹钟，在荣耀 MagicOS 等激进省电 ROM 上，App 熄屏一整夜被"冻结/深度睡眠"后，闹钟到点送不出来；而 2 分钟测试是刚从前台点完按钮、延迟又短，系统来不及冻结，所以一直能响，掩盖了问题。
-  - 改为用 `AlarmManager.setAlarmClock()` 登记提醒——这是 Android 里唯一被系统及各家 OEM ROM 当作"用户闹钟"对待、能穿透 Doze + 应用待机 + 厂商冻结按时送达的闹钟类型（系统时钟 App 用的就是它）。
-  - 测试闹钟改走同一条 `setAlarmClock` 路径，使"2 分钟测试"的结果真正代表真实提醒的送达能力。
-  - 无精确闹钟权限时退回 `setAndAllowWhileIdle` 并打 WARN 日志（正常机型不会走到，因已声明 `USE_EXACT_ALARM`）。
-  - 行为变化：设置提醒后状态栏会出现系统闹钟图标、锁屏可见"下一个闹钟"——对一个"看球闹钟"是符合预期的。
+- **核实全部 18 个 team id**：`teams.json` 里此前标注"未核实"的
+  `4/5/73/98/108/109/113/516/524`（拜仁、多特、热刺、AC米兰、国米、尤文、那不勒斯、马赛、巴黎）
+  经 2026-10-15 对照 API 实际响应逐一核验，**18/18 全部正确**。
+  并做了端到端验证：拉取当周六个联赛赛程，18 支球队全部能匹配到比赛。
+  这条此前错了会导致这些队完全抓不到比赛，而用户毫无感知——只是"怎么利物浦提醒了、热刺没有"。
+- **空 token 时同步会白重试 3 次**：`MissingTokenException` 现在直接失败并把原因写进同步状态，
+  让健康检查页显示"未配置数据源 token：请在 设置 → 数据源 填入"，而不是一个含糊的"同步失败"。
+- **CI 会跑不起来**：`gradle-wrapper.properties` 的 `distributionUrl` 指回官方源
+  （此前指向腾讯云镜像，GitHub Actions 的美国 runner 会超时），`settings.gradle.kts`
+  移除 4 处阿里云 maven 镜像（镜像只对这台机器有意义，不应进仓库拖慢所有人的 CI）。
+- 403 错误提示从"检查 local.properties"改为"请在设置页重新填入"——发布后的用户根本没有 local.properties。
+
+### 变更
+
+- `versionCode` 3 → 4，`versionName` "1.0.1" → "1.1.0"
+- `teams.json` `version` 3 → 4，note 字段改写为"已核实"并记录端到端验证结论
+- `MatchRepository` 新增 `TokenProvider` 依赖，不再直接读 `BuildConfig.FOOTBALL_DATA_TOKEN`
 
 ## [1.0.0] — 2026-05-17
 
@@ -98,7 +129,7 @@
 ### 已知限制（v1.0 故意保留）
 
 - **足总杯 / 各国域内杯赛 / 欧联杯 抓不到** —— football-data.org 免费档不覆盖。文档已在 README 里明确告知
-- `FOOTBALL_DATA_TOKEN` 烧在 BuildConfig 跟 APK 走 —— v1 给朋友圈用的妥协，APK 不要让陌生人拿到。v2 计划改成用户自带 token
+- `FOOTBALL_DATA_TOKEN` 烧在 BuildConfig 跟 APK 走 —— v1 给朋友圈用的妥协，APK 不要让陌生人拿到。**已在 1.1.0 改为双轨制**：发布的 APK 不含 token，用户填自己的
 - 设置页"资格赛 / 友谊赛"两个开关在当前数据源下不会影响任何比赛（free tier 的 competition.type 永远是 `LEAGUE` / `CUP`，不会归类为 QUALIFIERS / FRIENDLY）。代码保留以备未来数据源升级
 - 没有 release 签名 keystore（开发者自己生成，见 README）
 

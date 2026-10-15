@@ -26,6 +26,12 @@ class SettingsRepository @Inject constructor(
         val HOLIDAY_HOUR = intPreferencesKey("holiday_hour")
         /** v1 新增：首启动向导是否已走完。false 时 MainActivity 把用户引到向导，true 直接进赛程页 */
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        /**
+         * 用户在设置页自己填的 football-data.org token。
+         * 留空时由 [io.github.dandan.kanqiutixing.data.TokenProvider] 回退到构建期注入的值。
+         * 只存本机 DataStore，不上传任何服务器。
+         */
+        val API_TOKEN = stringPreferencesKey("api_token")
         // 注：v0.1 用过 EXACT_ALARM_PROMPTED key 来记"是否弹过精确闹钟权限"，
         // v1 改成向导显式引导后这个标记不再使用。老 user DataStore 里如果还残留也无所谓——
         // 反正没人读它。
@@ -49,6 +55,14 @@ class SettingsRepository @Inject constructor(
 
     suspend fun markOnboardingComplete() {
         context.dataStore.edit { it[Keys.ONBOARDING_DONE] = true }
+    }
+
+    /** 用户填写的数据源 token；未填写时返回空串 */
+    suspend fun getApiToken(): String =
+        context.dataStore.data.first()[Keys.API_TOKEN]?.trim().orEmpty()
+
+    suspend fun setApiToken(raw: String) {
+        context.dataStore.edit { it[Keys.API_TOKEN] = raw.trim() }
     }
 
     suspend fun current(): Settings = flow.first()

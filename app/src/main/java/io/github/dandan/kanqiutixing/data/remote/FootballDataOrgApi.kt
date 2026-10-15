@@ -23,9 +23,9 @@ import retrofit2.http.Query
  *    - 南美洲赛事、国家队友谊赛
  *  README "已知限制"小节必须告知用户这些杯赛比赛抓不到。
  *
- *  ⚠️ FOOTBALL_DATA_TOKEN 烧在 BuildConfig 里随 APK 分发。
- *    v1 阶段为了让朋友们直接装就能用，是有意为之。
- *    TODO(v2)：让用户自带 token，否则一旦 APK 流出去免费档配额会被陌生人耗光。
+ *  token 由调用方通过 [io.github.dandan.kanqiutixing.data.TokenProvider] 提供（双轨制：
+ *  用户在 App 内设置的优先，未设置时回退构建期注入的 BuildConfig 值）。
+ *  对外分发的 release 包不应内置任何 token —— 详见 app/build.gradle.kts 里的构建期告警。
  */
 interface FootballDataOrgApi {
     @GET("v4/competitions/{competition}/matches")

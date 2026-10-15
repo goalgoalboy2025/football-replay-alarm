@@ -47,8 +47,8 @@ android {
         applicationId = "io.github.dandan.kanqiutixing$betaSuffix"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.0.1" + if (isBeta) "-beta" else ""
+        versionCode = 4
+        versionName = "1.1.0" + if (isBeta) "-beta" else ""
 
         // 桌面名：共存测试包带"·测"，图标一眼可辨，不会和正式包搞混
         manifestPlaceholders["appLabel"] =
@@ -64,6 +64,10 @@ android {
             "APPLICATION_LABEL",
             "\"${if (isBeta) "看球不熬夜闹钟·测" else "看球不熬夜闹钟"}\""
         )
+        // 数据源 token —— 双轨制的「构建注入」轨，见 data/TokenProvider.kt：
+        //   本地开发 / CI：在 local.properties 填自己的 token，clone 下来就能跑
+        //   对外分发的 release 包：必须留空，让用户在 App 内 设置 → 数据源 填自己的
+        // 留空时本字段是空串，TokenProvider 会要求用户填写，不会静默发无效请求。
         buildConfigField(
             "String",
             "FOOTBALL_DATA_TOKEN",
@@ -182,3 +186,26 @@ dependencies {
 
 // 注：v0.1 开发期曾有 rotateLauncherIconColor task 自动换图标背景色（肉眼区分新旧 APK），
 // 在改造 v1 公开版时已移除——公开版用户没有这个需求。如需调试期使用，参考 kanqiutixing-v0.1-personal/。
+
+// ── 发布安全：release 包里不应内置 API token ───────────────────────────
+// FOOTBALL_DATA_TOKEN 会被 BuildConfig 写进 dex，任何人 unzip APK 就能逆向取出，
+// 然后用它耗尽你的 football-data.org 免费档配额（10 次/分钟）。
+// 对外分发的 release 包请把 local.properties 里的该值清空，让用户在 App 内填自己的。
+// 这里只告警不阻断——本地出包自测时带 token 是合理的。
+val embeddedToken: String = localProps.getProperty("FOOTBALL_DATA_TOKEN", "") ?: ""
+gradle.taskGraph.whenReady {
+    val isReleaseBuild = allTasks.any {
+        it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease")
+    }
+    if (isReleaseBuild && embeddedToken.isNotBlank()) {
+        logger.warn(
+            "\n" + "=".repeat(74) + "\n" +
+                "[!] 你正在构建 release 包，但 local.properties 里有非空的 FOOTBALL_DATA_TOKEN。\n" +
+                "    该 token 会被明文写进 dex，任何拿到 APK 的人都能逆向取出并使用。\n" +
+                "    对外分发前：把 local.properties 的 FOOTBALL_DATA_TOKEN 清空后重新构建，\n" +
+                "    让用户首次启动后在  设置 -> 数据源  填入自己的 token。\n" +
+                "    验证：unzip -p <apk> classes*.dex | strings | grep -i \"你的token前8位\"\n" +
+                "=".repeat(74)
+        )
+    }
+}

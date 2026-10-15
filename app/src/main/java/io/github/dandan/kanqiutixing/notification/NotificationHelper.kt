@@ -7,10 +7,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.annotation.SuppressLint
+import android.app.Notification
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -108,6 +111,9 @@ class NotificationHelper @Inject constructor(
         ).forEach { nm.createNotificationChannel(it) }
     }
 
+    // 通知渠道是 API 26 才有的。守卫写在调用方 ensureChannels()/channelStates() 里，
+    // 但 lint 看不到跨函数的版本判断，这里显式声明要求，语义也更清楚。
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun buildChannel(id: String, name: String, desc: String): NotificationChannel {
         val existing = nm.getNotificationChannel(id)
         val ch = existing
@@ -140,6 +146,30 @@ class NotificationHelper @Inject constructor(
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setAutoCancel(true)
+
+    /**
+     * 所有 notify 的唯一出口。
+     *
+     * Android 13+ 没拿到 POST_NOTIFICATIONS 时，notify() 不会崩、也不会报错，
+     * 只是被系统**静默丢弃**——调用方看日志会以为"发成功了"。以前这里只是打个 WARN
+     * 然后照发，既骗日志也过不了 lint。现在直接不发，并把这件事记在日志和
+     * 提醒健康检查页上（那里会显示通知权限未开）。
+     *
+     * 另外 catch SecurityException：极少数 ROM 会在权限已授的情况下仍抛，
+     * 不接住会让"发个通知"把整个 BroadcastReceiver 带崩。
+     */
+    @SuppressLint("MissingPermission")
+    private fun post(id: Int, notif: Notification) {
+        if (!hasNotificationPermission()) {
+            Log.w(TAG, "POST_NOTIFICATIONS 未授权，跳过 notify(id=$id)：强行发也会被系统静默丢弃")
+            return
+        }
+        try {
+            NotificationManagerCompat.from(context).notify(id, notif)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "notify 被系统拒绝 id=$id", e)
+        }
+    }
 
     fun notifyMatchReminder(match: MatchEntity, type: NotificationType) {
         val zone = ZoneId.of("Asia/Shanghai")
@@ -181,11 +211,7 @@ class NotificationHelper @Inject constructor(
             .setContentIntent(pi)
             .build()
 
-        if (!hasNotificationPermission()) {
-            Log.w(TAG, "notifyMatchReminder: POST_NOTIFICATIONS 未授权，系统会静默丢弃 " +
-                "match=${match.homeTeamName} vs ${match.awayTeamName}")
-        }
-        NotificationManagerCompat.from(context).notify(match.id.toInt(), notif)
+        post(match.id.toInt(), notif)
         Log.i(TAG, "notifyMatchReminder posted id=${match.id} type=$type")
     }
 
@@ -203,7 +229,7 @@ class NotificationHelper @Inject constructor(
             .setVibrate(null)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-        NotificationManagerCompat.from(context).notify(NOTIF_ID_DIGEST, notif)
+        post(NOTIF_ID_DIGEST, notif)
     }
 
     /**
@@ -229,6 +255,6 @@ class NotificationHelper @Inject constructor(
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(pi)
             .build()
-        NotificationManagerCompat.from(context).notify(NOTIF_ID_TEST, notif)
+        post(NOTIF_ID_TEST, notif)
     }
 }
