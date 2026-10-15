@@ -27,7 +27,7 @@ App 会主动向以下两个公开服务发起 HTTP 请求，**仅用于获取�
 | **football-data.org** | 拉取五大联赛 + 欧冠的比赛日程 | 每周六约 6 次请求，可手动刷新 | https://www.football-data.org/terms |
 | **timor.tech** | 查询当年中国大陆节假日（用于判断"工作日 / 节假日"早晨时间） | 每年首次启动时 1 次 | 第三方服务，无官方隐私政策；查询内容仅为年份数字 |
 
-App 在向 football-data.org 请求时，会携带 API token（开发者预先配置在 App 内）。token 用于鉴权，不包含你的任何信息。
+App 在向 football-data.org 请求时，会携带 API token 用于鉴权。token 有两种来源：你在 App「设置 → 数据源」里自己填写的（免费注册 football-data.org 后获得），或开发者构建时注入的。**token 只存在你的手机本地，仅随赛程请求发送给 football-data.org，不会发给任何其他服务器**。
 
 ## 申请的权限
 
@@ -56,7 +56,7 @@ App 不申请定位、相机、麦克风、通讯录、相册等任何敏感权�
 
 ## 联系方式
 
-本项目源码托管在 GitHub：`https://github.com/dandan/kanqiutixing`（待发布）
+本项目源码托管在 GitHub：`https://github.com/goalgoalboy2025/football-replay-alarm`
 
 如果你对本隐私政策有任何疑问，可以到该仓库提 issue。
 

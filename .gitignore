@@ -24,3 +24,6 @@ app/release/
 # 签名密码不进 git
 signing.properties
 /app/signing.properties
+
+# 信息图源稿仅本地留存，仓库只放 PNG
+screenshots/*.html
